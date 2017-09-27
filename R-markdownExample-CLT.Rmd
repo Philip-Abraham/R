@@ -1,0 +1,143 @@
+---
+output: html_document
+---
+
+```{r echo=FALSE,results='hide'}
+
+```
+# Exponential Distribution and Comparison with the Central Limit Theorem
+
+Author: *Philip Abraham*  
+Date: *October 5, 2016*
+
+
+## Synopsis
+The goal of the analysis was to determine whether the distribution of the means
+and the variance of 1000 samples, each with 40 random exponentials, behave as 
+predicted by the Central Limit Theorem. Based on the analysis done for the given 
+exponential distribution, the sample statistics was found to be nearly normal, 
+centered at the population mean, and the sample variance approximates to the 
+square of the population standard deviation divided by the sample size. 
+Therefore, this analysis validates the Central Limit Theorem.
+
+## Central Limit Theorem
+The Central Limit Theorem (CLT) states that the distribution of means of 
+independent and identically distributed(iid) variables becomes that of a standard 
+normal as the sample size increases.
+
+## Analysis
+In this project R program was utilized to see, empirically, how the Central Limit 
+Theorem works. 
+
+Forty iid exponentials, all with a rate parameter lambda = 0.2, were generated in R. 
+This group of exponentials make up a sample of size 40. From this sample a statistic 
+was computed. The statistic for this analysis is the mean of the sample (it varies 
+for each sample). Samples each containing 40 iid exponentials, were generated 1000 
+times in R, and the distribution of the 1000 sample means was investigated.
+
+The goal of the analysis was to determine whether the distribution of the means,
+and the variance of the 1000 samples, each with random 40 exponentials, behave 
+as predicted by the Central Limit Theorem.
+
+## Simulation
+CLT states that, when certain conditions are satisfied, sample means are
+approximately normally distributed, no matter what the underlying distribution is.
+
+First, show a histogram (Figure 1) of the underlying distribution.
+```{r echo=FALSE, fig.width=9, fig.height = 3, fig.align='center'}
+# Figure 1 Code
+set.seed(1234)
+X <- rexp(1000,0.2)
+hist(X, probability = TRUE,
+     main = "Figure 1-1000 Exponential Distributions with a Rate(lambda) of 0.2",
+     col="grey", xlab='Sample Means', breaks=100)
+################################################################################
+```
+Looking at the distribution produced above in Figure 1, it's definitely not normal. 
+It reflects an exponential distribution. The theoretical population mean($\mu$) 
+and the population variance($\sigma^2$) for exponential distributions are given by:
+$$\mu = \frac{1}{lambda} = \frac{1}{0.2} = 5$$ 
+
+$$\sigma^2 = \frac{1}{lambda^2} = \frac{1}{0.2^2} = 25$$
+
+However, the CLT is concerned with the distribution of means of the sample means.
+Drawing 1000 samples (size = 40 exponential distribution each), a histogram of 
+the distribution of sample means is generated, as shown below in Figure 2.
+```{r echo=FALSE, fig.width=9, fig.height = 6, fig.align='center'}
+# Code for generating distribution of sample means and the associated Figure 2
+set.seed(112)
+mns=NULL
+for (i in 1 : 1000) mns = c(mns, mean(rexp(40,0.2)))
+     hist(mns, probability = TRUE, 
+main="Figure 2-Distribution of 1000 Sample Means of Exponentials-Sample Size(n) = 40 ", 
+        xlab = "Means of Sample Means", breaks = 100, col ="grey")
+abline(v=mean(mns), col="blue",lty=2, lwd=4)
+abline(v=5, col="red",lty=2, lwd=3)
+lines(density(mns), lwd=3, col="black")
+text(3.8, 0.45, pos= 3.8, "Red line is the\n location of\n the theoretical mean at 5", 
+     cex = .8, col = "red")
+text(5.5, 0.58, pos= 4, 
+"Blue line is the location\n of the calculated mean\n at 5.003\n of the sample means", 
+     cex = .8, col = "blue")
+################################################################################
+```     
+
+## Conclusions - Comparison of the results of the simulation with the CLT
+For random samples of size n selected from some population with mean = $\mu$ and 
+standard deviation = $\sigma$, the following three corollaries from the CLT hold:  
+
+1. CLT states that the distribution of averages of iid variables becomes that of
+a standard normal distribution as the sample size increases.
+
+Looking at distribution produced above in Figure 2, while the original distribution 
+was far from normal (see Figure 1), the distribution of sample means in Figure 2
+is approximately normal.
+
+A normal probability plot (NPP) was created below (Figure 3) with the sampling 
+means distribution. NPP is a plot that determines if a sample is drawn 
+from a normal distribution. If the data is drawn from a normal distribution, 
+then the points will fall nearly in a straight line. The NPP shown below in 
+Figure 3 indicates that sample means distribution follow a close approximation 
+to a normal distribution with n = 40 sample size.
+```{r echo=FALSE, fig.width=9, fig.height = 4.5, fig.align='center'}
+# Code for the test of normality and the accompanying Figure 3 Q-Q Plot
+     qqnorm(mns, main = "Figure 3-Normal Q-Q Plot, Sample Size n = 40");qqline(mns,col = 2)
+################################################################################
+```
+2. The mean of the sample means and the population mean are equal.
+$\bar X_n$ = $\mu$
+```{r echo=FALSE}
+# Code for calculating mean and variance of sampling mean distribution
+X_n <- mean(mns) #Sample Mean
+v <- var(mns) #Sample Variance
+################################################################################
+```
+**The sample mean($\bar X_n$) generated in R for the sample mean distribution** 
+**is `r round(X_n,3)`, which is very close to the calculated theoretical** 
+**population mean($\mu$) of 5.** Figure 2 showing the distribution compares the 
+locations of the theoretical mean and the sample means.
+
+3. The population standard deviation($\sigma$) and the standard deviation of 
+the sample means($\sigma_x$) are related by the formula:
+$$\sigma_x = \frac{\sigma}{\sqrt{n}}$$
+The theoretical sample variance(Var) is the square of the sample 
+standard deviation($\sigma_x$).
+$$Var = \sigma_x^2 =  \frac{\sigma^2}{n} = \frac{1}{lambda^2*n} = \frac{1}{(0.2^2)*(40)}$$
+**Hence, the theoretical sample variance(Var) = 0.625.** Comparing with the
+R calculated sample means distribution variance below:
+
+Theoretical Var | Sample Means Dist.Var
+-------------- | ----------------------
+0.625         | `r round(v,3)`
+
+ It shows that the variance (**`r round(v,3)`**) of this sample means distribution 
+nearly approximates the theoretical population variance to within < 4%.
+
+Based on the validation of the above three CLT corollaries, it can be concluded that 
+the distribution of the means and the variance of the 1000 samples, each with 
+random 40 exponentials, behave as predicted by the CLT.
+
+## Appendix 
+```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
+```
+

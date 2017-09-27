@@ -1,0 +1,166 @@
+---
+output: pdf_document
+---
+
+```{r echo=FALSE,results='hide'}
+
+```
+# The Effect of the Delivery Method and/or Dosage Levels of Vitamin C on Tooth Growth in Guinea Pigs
+
+Author: *Philip Abraham*  
+Date: *October 8, 2016*
+
+## Synopsis
+Basic inferential data analysis was conducted with the ToothGrowth data
+available in the R program data sets. The objective of the analysis was to
+investigate whether the delivery method or the dosage levels of the supplement 
+vitamin C, given to 60 independent guinea pig samples, either via orange juice or 
+ascorbic acid affected the tooth growth lengths of guinea pigs.
+This analysis concludes that even though the dosage levels of vitamin C DOES 
+impact tooth growth lengths significantly, there is NOT a significant difference 
+between tooth lengths for guinea pigs fed ascorbic and orange juice. 
+
+## Data Set Information
+The ToothGrowth data frame consists of 60 observations on 3 variables.
+```{r echo=FALSE}
+library(datasets)
+data("ToothGrowth")
+tooth_df <- ToothGrowth
+str(tooth_df)
+```
+
+## Study Information
+The data source C. I. Bliss (1952) "The Statistics of Biosassay"  cites the 
+original study done by Crampton, E.W. **The Crampton paper indicates that these** 
+**data are for 60 SEPARATE guinea pigs, hence was an INDEPENDENT samples study.**
+Each of the 60 pigs received one of three dose levels of vitamin C (0.5, 1, and 
+2 mg/day) by one of the two delivery methods - orange juice (OJ), or ascorbic 
+acid (VC), a form of vitamin C. In essence, 30 guinea pigs were given orange juice,
+and another 30 guinea pigs were given ascorbic acid.
+The growth (len) of the odontoblasts of the incisor tooth was measured as a 
+criterion of tooth growth in the guinea pigs.
+
+## Exploratory Data Analysis
+First, a plot was created to show the effect of dosage levels of orange juice(OJ) 
+and ascorbic acid(VC) on tooth growth lengths in the guinea pigs. See Figure 1 below.
+```{r echo=FALSE, fig.width=9, fig.height = 3, fig.align='center'}
+# Code for Figure 1
+library(ggplot2)
+p <- ggplot(tooth_df,aes(dose,len, color=supp)) + 
+scale_color_discrete(name="Legend") + 
+theme(legend.key=element_rect(fill=NA)) + 
+guides(colour = guide_legend(override.aes = list(size=5)))
+#Add Box plot with jittered points
+p1 <- p  + facet_grid(. ~ supp) + 
+geom_jitter(shape=16, position=position_jitter(0.1),alpha=.5, size=5)
+#Add trend line
+p2 <- p1 + stat_summary(fun.y=mean, geom="line", size=3)
+#Add titles and labels
+p3<-p2 + 
+labs(title="ToothGrowth data: length vs dose, given type of supplement", 
+    x="Dosage Levels", y = "Tooth Growth Length")
+p3+theme(panel.background = element_rect(fill = 'black'))
+################################################################################
+```
+Figure 1 above shows a strong trend in the rise of tooth lengths with dosage levels
+for guinea pigs fed either orange juice or ascorbic acid. 
+
+Next a plot displaying pig tooth growth length by ascorbic acid(VC) and orange 
+juice(OJ), given varying dosage levels is shown below in Figure 2.
+```{r echo=FALSE, fig.width=9, fig.height = 3.5, fig.align='center'}
+# Code for Figure 2
+library(ggplot2)
+p <- ggplot(tooth_df,aes(supp,len, color=supp)) + 
+scale_color_discrete(name="Legend") + 
+theme(legend.key=element_rect(fill=NA)) + 
+guides(colour = guide_legend(override.aes = list(size=5)))
+#Add Box plot with jittered points
+p1 <- p + geom_boxplot(fill="darkolivegreen") + facet_grid(. ~ dose) + 
+geom_jitter(shape=16, position=position_jitter(0.6),alpha=.8, size=2)
+#Add means point for each delivery method
+p2 <- p1 + stat_summary(fun.y=mean, geom="point", shape=23, size=8, 
+color= "azure", fill="black")
+#Add titles and labels
+p3<-p2 + 
+labs(title="Figure 2-ToothGrowth data: length vs supplement, given varying dosage levels", 
+x="Delivery Method", y = "Tooth Growth Length")
+# Change the panel color & yaxis limits
+p3+theme(panel.background = element_rect(fill = 'black'))
+################################################################################
+```
+Looking at Figure 2, it seems, at least visually, that delivering orange 
+juice to the guinea pigs led to higher tooth growth in guinea pigs than delivering
+ascorbic acid at the 0.5 and 1.0 mg/day levels. And on the 2.0 mg/day level
+there doesn't seem to be a noticeable change in tooth growth for either 
+delivery methods. So it might be interesting to investigate this relationship a 
+bit further to to see if there is a statistically significant difference between 
+tooth lengths for guinea pigs fed ascorbic versus guinea pigs fed orange juice. 
+
+## Inferential Statistics
+**Based on the trend shown in Figure 2 above, the null hypothesis($H_0$) for** 
+**this analysis is the assertion that the delivery method of the supplement** 
+**vitamin C, either via orange juice or ascorbic acid does effect tooth growth** 
+**lengths in guinea pigs**. The alternate hypothesis($H_a$) will be that the 
+there is no significant difference between tooth lengths for guinea pigs fed 
+ascorbic and orange juice.
+**A two-sample t-test was utilized to test the null hypothesis.** The t-test works 
+well whenever the distribution of the data is roughly symmetric and mound shaped.
+A histogram of the  data-set's numeric variable, len, shown below in Figure 3.
+```{r echo=FALSE, fig.width=9, fig.height = 3, fig.align='center'}
+# Code for Figure 3
+hist(tooth_df$len, probability = TRUE,
+     main = "Figure 3-Distribution of Tooth Lengths",
+     col="darkorange", xlab='Tooth Lengths', breaks=6)
+################################################################################
+```
+The histogram displays a slightly skewed distribution, **so a shapiro.test was**
+**performed in R to test the degree of normality of the tooth growth length distribution.**
+```{r echo=FALSE}
+# Code for the shapiro.test
+p<-shapiro.test(tooth_df$len)
+p[2]
+################################################################################
+```
+**The p-value (`r p[2]`) generated for the shapiro.test is >0.05, therefore it is** 
+**assumed that the tooth growth length data has a Normal distribution.**
+
+Next, a two-sample(independent groups) t-test was run in R, comparing the means 
+of tooth growth lengths between the guinea pigs given orange juice and the guinea 
+pigs on ascorbic acid.
+```{r echo=FALSE}
+# Code for the t.test for delivery method comparison
+df_vc <- subset(tooth_df, tooth_df$supp == "VC")#guinea pigs on ascorbic acid
+df_oj <- subset(tooth_df, tooth_df$supp == "OJ")#guinea pigs given orange juice
+val1 <- t.test(df_oj$len, df_vc$len, paired = FALSE, var.equal = FALSE)
+val1[3]
+val1[4]
+################################################################################
+```
+**With a p-value > 0.05 generated for the t-test, it can be concluded that there is** 
+**no significant difference between tooth lengths for guinea pigs fed ascorbic acid** 
+**and orange juice, The 95 percent confidence interval includes zero. Hence, the** 
+**null hypothesis that these two groups have different tooth lengths is rejected.**
+
+Figure 1 showed a strong trend in the rise of tooth lengths with dosage levels
+for guinea pigs fed either orange juice or ascorbic acid.The relationship between 
+tooth growth lengths and dosage levels (0.5 and 2.0 mg/day) of vitamin C was 
+tested  in R with a two-sample(independent groups) t-test to see the statistical
+significance of the relationship independent of the delivery method.
+```{r echo=FALSE}
+# Code for the t.test for dosage level comparison
+df_5 <- subset(tooth_df, tooth_df$dose == 0.5)
+df_2<- subset(tooth_df, tooth_df$dose == 2.0)
+val2 <- t.test(df_2$len, df_5$len, paired = FALSE, var.equal = FALSE)
+val2[3]
+val2[4]
+################################################################################
+```
+**A t-test run in R produced p-value << 0.05, and the 95 percent confidence** 
+**interval does not include zero. This shows a strong correlation of tooth growth** 
+**lengths with the dosage levels of vitamin C independent of whether the guinea** 
+**pigs were given orange juice or ascorbic acid.**
+
+## Appendix 
+```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
+```
+
